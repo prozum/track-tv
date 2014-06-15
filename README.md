@@ -27,10 +27,10 @@ $ cd track-tv
 $ # Lav en byggemappe og gå ind i den
 $ mkdir build && cd build
 
-$ # Generer Makefile med CMake
+$ # Genere Makefile med CMake
 $ cmake ..
 
-$ # Kompilere programm med make
+$ # Kompilere program med make
 $ make -j <antal kerner>
 
 $ # Kør programmet med kaskade fil som første parameter
