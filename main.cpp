@@ -64,85 +64,85 @@ int main(int, char *argv[])
     
     do
     {
-	key = waitKey(1);
-	
-	av[0]  = 0;
-	av[1]  = 0;
-        
-	cam >> src_img; // get a new frame from camera
-        
+        key = waitKey(1);
+
+        av[0]  = 0;
+        av[1]  = 0;
+
+        cam >> src_img; // get a new frame from camera
+
         cvtColor(src_img, gray_img, CV_RGB2GRAY);
         equalizeHist(gray_img,eq_img);
-        
+
         cas.detectMultiScale(eq_img,faces,1.3,5);
-        
+
         for (i = faces.begin(); i!= faces.end(); ++i) {
-	    av[0] += i->x+i->width/2;
-	    av[1] += i->y+i->height/2;
-            rectangle(
-                src_img,
-                Point(i->x,i->y),
-                Point(i->x + i->width, i->y + i->height),
-                CV_RGB(255,0,0),
-                2);
-        }
-        
+            av[0] += i->x+i->width/2;
+            av[1] += i->y+i->height/2;
+                rectangle(
+                    src_img,
+                    Point(i->x,i->y),
+                    Point(i->x + i->width, i->y + i->height),
+                    CV_RGB(255,0,0),
+                    2);
+            }
+
         if (faces.size()>0)
-	{
-	    rounds++;
-	    
-	    av[0] = av[0]/faces.size();
-	    av[1] = av[1]/faces.size();
-	    
-	    if (av[0]>WIDTH/2+STOPAREA)
-	    {
-		mes[0]++;
-		mes[1]++;
-	    }
-	    else if (av[0]<WIDTH/2-STOPAREA)
-	    {
-		mes[0]++;
-	    }
-	}
-   
-	if (mes[0]==CHECKROUNDS) // If active motor
-	{
-	    if (mes[1]==CHECKROUNDS) // If right
-	    {
-		firmata_digitalWrite(firmata, ACPIN, HIGH);
-		firmata_digitalWrite(firmata, DIPIN, HIGH);
-		usleep(TIME);
-		firmata_digitalWrite(firmata, ACPIN, LOW);
-		cout << "Go right" <<  endl;
-	    }
-	    else if (mes[1]==0) // If left
-	    {
-		firmata_digitalWrite(firmata, ACPIN, HIGH);
-		firmata_digitalWrite(firmata, DIPIN, LOW);
-		usleep(TIME);
-		firmata_digitalWrite(firmata, ACPIN, LOW);
-		cout << "Go left" <<  endl;
-	    }
-	}
-	else
-	{
-	    firmata_digitalWrite(firmata, ACPIN, LOW);
-	    cout << "Stay" <<  endl;
-	}    
+        {
+            rounds++;
+
+            av[0] = av[0]/faces.size();
+            av[1] = av[1]/faces.size();
+
+            if (av[0]>WIDTH/2+STOPAREA)
+            {
+            mes[0]++;
+            mes[1]++;
+            }
+            else if (av[0]<WIDTH/2-STOPAREA)
+            {
+            mes[0]++;
+            }
+        }
+
+        if (mes[0]==CHECKROUNDS) // If active motor
+        {
+            if (mes[1]==CHECKROUNDS) // If right
+            {
+                firmata_digitalWrite(firmata, ACPIN, HIGH);
+                firmata_digitalWrite(firmata, DIPIN, HIGH);
+                usleep(TIME);
+                firmata_digitalWrite(firmata, ACPIN, LOW);
+                cout << "Go right" <<  endl;
+            }
+            else if (mes[1]==0) // If left
+            {
+                firmata_digitalWrite(firmata, ACPIN, HIGH);
+                firmata_digitalWrite(firmata, DIPIN, LOW);
+                usleep(TIME);
+                firmata_digitalWrite(firmata, ACPIN, LOW);
+                cout << "Go left" <<  endl;
+            }
+        }
+        else
+        {
+            firmata_digitalWrite(firmata, ACPIN, LOW);
+            cout << "Stay" <<  endl;
+        }
+
+        if (rounds==CHECKROUNDS)  {
+            mes[0] = 0;
+            mes[1] = 0;
+
+            rounds = 0;
+        }
 	
-	if (rounds==CHECKROUNDS)  { 
-	    mes[0] = 0;
-	    mes[1] = 0; 
-	    
-	    rounds = 0;
-	}
+        imshow("track-tv", src_img);
 	
-	imshow("track-tv", src_img);
-	
-	if (key==116) {
-	    pnstate = !pnstate;
-	    firmata_digitalWrite(firmata, PNPIN, pnstate);
-	}
+        if (key==116) {
+            pnstate = !pnstate;
+            firmata_digitalWrite(firmata, PNPIN, pnstate);
+        }
     }
     while (key!=27);
     
