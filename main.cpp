@@ -17,6 +17,9 @@ using namespace std;
 #define ACPIN 3 // Activate pin
 #define PNPIN 4 // Pne pin
 
+#define KEY_ESC  27
+#define KEY_P	116
+
 #define WIDTH    	640
 #define HEIGHT   	480
 #define STOPAREA 	40
@@ -25,60 +28,82 @@ using namespace std;
 
 int main(int, char *argv[])
 {
-    t_firmata *firmata;
-    firmata = firmata_new( (char*) "/dev/ttyACM99"); //init Firmata
-    
-    while(!firmata->isReady) //Wait until device is up
-	firmata_pull(firmata);
-    
-    firmata_pinMode(firmata, DIPIN, MODE_OUTPUT); // Direction pin
-    firmata_pinMode(firmata, ACPIN, MODE_OUTPUT); // Activate pin
-    firmata_pinMode(firmata, PNPIN, MODE_OUTPUT); // Pn pin
-  
-    namedWindow("track-tv",WINDOW_NORMAL);
-    setNumThreads(4);  // 4 theads for TBB
-    cvUseOptimized(1); // Use optimizations
-  
-    VideoCapture cam(0); // open the default camera
-    if(!cam.isOpened()) {
-	cout << "Cannot open cam!" << endl;
-        return -1;
-    }
+    int rounds_ac,rounds_di;
+    int total_x,total_y;
+    int average_x,average_y;
+
+    int rounds = 0;
+    int key = -1;
+    bool pnstate = false;
+
+    vector<Rect> faces;
+    vector<Rect>::const_iterator i;
 
     CascadeClassifier cas;
+    Mat src_img, gray_img, eq_img;
+
+    t_firmata *firmata;
+
+    // Load cascade file
     if  (!cas.load(string(argv[1]))) {
         cout << "Cannot read cascade!" << endl;
         return -1;
     }
 
-    Mat src_img, gray_img, eq_img;
-    
-    vector<Rect> faces;
-    vector<Rect>::const_iterator i;
+    //Init Firmata
+    firmata = firmata_new( (char*) "/dev/ttyACM99");
 
-    int mes[2];
-    int av[2];
-    int rounds = 0;
-    int key = -1;
-    bool pnstate = false; 
-    
+    //Wait until device is up
+    while(!firmata->isReady)
+	firmata_pull(firmata);
+
+    // Direction pin
+    firmata_pinMode(firmata, DIPIN, MODE_OUTPUT);
+
+    // Activate pin
+    firmata_pinMode(firmata, ACPIN, MODE_OUTPUT);
+
+    // Pneumatic cylinder pin
+    firmata_pinMode(firmata, PNPIN, MODE_OUTPUT);
+  
+    // Setup window
+    namedWindow("track-tv",WINDOW_NORMAL);
+
+    // Use 4 theads in OpenCV
+    setNumThreads(4);
+    // Use optimizations in OpenCV
+    cvUseOptimized(1);
+
+    // Open the default camera
+    VideoCapture cam(0);
+    if(!cam.isOpened()) {
+	cout << "Cannot open cam!" << endl;
+        return -1;
+    }
+
     do
     {
+        // Get key input
         key = waitKey(1);
 
-        av[0]  = 0;
-        av[1]  = 0;
+        // get a new frame from camera
+        cam >> src_img;
 
-        cam >> src_img; // get a new frame from camera
-
+        // Simplify image for cas analysis
         cvtColor(src_img, gray_img, CV_RGB2GRAY);
         equalizeHist(gray_img,eq_img);
 
+        // Analyse image
         cas.detectMultiScale(eq_img,faces,1.3,5);
 
+        // Reset total x & y values
+        total_x  = 0;
+        total_y  = 0;
+
+        // Calc total x & y values for face positions and draw rect around faces.
         for (i = faces.begin(); i!= faces.end(); ++i) {
-            av[0] += i->x+i->width/2;
-            av[1] += i->y+i->height/2;
+            total_x += i->x+i->width/2;
+            total_y += i->y+i->height/2;
                 rectangle(
                     src_img,
                     Point(i->x,i->y),
@@ -87,65 +112,73 @@ int main(int, char *argv[])
                     2);
             }
 
-        if (faces.size()>0)
+        // If any faces is found
+        if (faces.size())
         {
             rounds++;
 
-            av[0] = av[0]/faces.size();
-            av[1] = av[1]/faces.size();
+            // Calc average x & y value for faces
+            average_x = total_x/faces.size();
+            average_y = total_y/faces.size();
 
-            if (av[0]>WIDTH/2+STOPAREA)
+            if (average_x > WIDTH/2 + STOPAREA)
             {
-            mes[0]++;
-            mes[1]++;
+                rounds_ac++;
+                rounds_di++;
             }
-            else if (av[0]<WIDTH/2-STOPAREA)
-            {
-            mes[0]++;
-            }
+            else if (average_x < WIDTH/2 - STOPAREA)
+                rounds_ac++;
         }
 
-        if (mes[0]==CHECKROUNDS) // If active motor
+        // If all rounds suggested to activate the motor
+        if (rounds_ac == CHECKROUNDS)
         {
-            if (mes[1]==CHECKROUNDS) // If right
+            firmata_digitalWrite(firmata, ACPIN, HIGH);
+
+            // If all rounds suggested to go right
+            if (rounds_di == CHECKROUNDS)
             {
-                firmata_digitalWrite(firmata, ACPIN, HIGH);
                 firmata_digitalWrite(firmata, DIPIN, HIGH);
                 usleep(TIME);
                 firmata_digitalWrite(firmata, ACPIN, LOW);
                 cout << "Go right" <<  endl;
             }
-            else if (mes[1]==0) // If left
+            // If all rounds suggested to go left
+            else if (rounds_di == 0)
             {
-                firmata_digitalWrite(firmata, ACPIN, HIGH);
                 firmata_digitalWrite(firmata, DIPIN, LOW);
                 usleep(TIME);
                 firmata_digitalWrite(firmata, ACPIN, LOW);
                 cout << "Go left" <<  endl;
             }
         }
+        // If any rounds suggested to stop the motor
         else
         {
             firmata_digitalWrite(firmata, ACPIN, LOW);
             cout << "Stay" <<  endl;
         }
 
-        if (rounds==CHECKROUNDS)  {
-            mes[0] = 0;
-            mes[1] = 0;
+        // Reset rounds if CHECKROUNDS is reached.
+        if (rounds == CHECKROUNDS)  {
+            rounds_ac = 0;
+            rounds_di = 0;
 
             rounds = 0;
         }
-	
+
+        // Show image
         imshow("track-tv", src_img);
-	
-        if (key==116) {
+
+        // Activate pneumatic cylinder
+        if (key == KEY_P) {
             pnstate = !pnstate;
             firmata_digitalWrite(firmata, PNPIN, pnstate);
         }
     }
-    while (key!=27);
-    
+    while (key != KEY_ESC);
+
+    // Stop motor
     firmata_digitalWrite(firmata, ACPIN, LOW);
 
     // the camera will be deinitialized automatically in VideoCapture destructor
