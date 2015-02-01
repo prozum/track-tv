@@ -1,38 +1,36 @@
 track-tv
 ========
+Program to control screen tracking and following faces
 
 # Installer Python Version
 ```bash
-$ # Brug pip til at installere pyFirmata (Eller hent det direkte fra github)
-$ sudo pip install pyfirmata
+# Use pip to install pyFirmata 
+sudo pip install pyfirmata
 
-$ # Brug git til at hente kildekoden
-$ git clone https://github.com/prozum/track-tv.git
+# Get source form github and enter source dir
+git clone https://github.com/prozum/track-tv.git && cd track-tv
 
-$ # Gå ind i track-tv mappen
-$ cd track-tv
-
-$ # Kør programmet
-$ python track-tv.py
+# Run track-tv
+python track-tv.py
 ```
 
 # Installer C++ Version
 ```bash
-$ # Brug git til at hente kildekoden
-$ git clone https://github.com/prozum/track-tv.git
+# Use pip to install pyFirmata 
+sudo pip install pyfirmata
 
-$ # Gå ind i track-tv mappen
-$ cd track-tv
+# Get source form github and enter source dir
+git clone https://github.com/prozum/track-tv.git && cd track-tv
 
-$ # Lav en byggemappe og gå ind i den
-$ mkdir build && cd build
+# Make build dir and enter build dir
+mkdir build && cd build
 
-$ # Genere Makefile med CMake
-$ cmake ..
+# Generate Makefile with CMake
+cmake ..
 
-$ # Kompilere program med make
-$ make -j <antal kerner>
+# Compile
+make
 
-$ # Kør programmet med kaskade fil som første parameter
-$ ./track-tv <kaskade fil>
+# Run track-tv with adress of cascade file as first parameter
+./track-tv <cascade-file>
 ```

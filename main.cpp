@@ -28,9 +28,9 @@ using namespace std;
 
 int main(int, char *argv[])
 {
-    int rounds_ac,rounds_di;
-    int total_x,total_y;
-    int average_x,average_y;
+    int rounds_ac, rounds_di;
+    int total_x, total_y;
+    int average_x, average_y;
 
     int rounds = 0;
     int key = -1;
@@ -50,12 +50,13 @@ int main(int, char *argv[])
         return -1;
     }
 
-    //Init Firmata
-    firmata = firmata_new( (char*) "/dev/ttyACM99");
+    // Init Firmata
+    firmata = firmata_new((char*)"/dev/ttyACM99");
 
-    //Wait until device is up
-    while(!firmata->isReady)
+    // Wait until device is up
+    while(!firmata->isReady) {
 	firmata_pull(firmata);
+    }
 
     // Direction pin
     firmata_pinMode(firmata, DIPIN, MODE_OUTPUT);
@@ -67,7 +68,7 @@ int main(int, char *argv[])
     firmata_pinMode(firmata, PNPIN, MODE_OUTPUT);
   
     // Setup window
-    namedWindow("track-tv",WINDOW_NORMAL);
+    namedWindow("track-tv", WINDOW_NORMAL);
 
     // Use 4 theads in OpenCV
     setNumThreads(4);
@@ -86,15 +87,15 @@ int main(int, char *argv[])
         // Get key input
         key = waitKey(1);
 
-        // get a new frame from camera
+        // Get a new frame from camera
         cam >> src_img;
 
         // Simplify image for cas analysis
         cvtColor(src_img, gray_img, CV_RGB2GRAY);
-        equalizeHist(gray_img,eq_img);
+        equalizeHist(gray_img, eq_img);
 
         // Analyse image
-        cas.detectMultiScale(eq_img,faces,1.3,5);
+        cas.detectMultiScale(eq_img, faces, 1.3, 5);
 
         // Reset total x & y values
         total_x  = 0;
@@ -118,15 +119,15 @@ int main(int, char *argv[])
             rounds++;
 
             // Calc average x & y value for faces
-            average_x = total_x/faces.size();
-            average_y = total_y/faces.size();
+            average_x = total_x / faces.size();
+            average_y = total_y / faces.size();
 
-            if (average_x > WIDTH/2 + STOPAREA)
+            if (average_x > WIDTH / 2 + STOPAREA)
             {
                 rounds_ac++;
                 rounds_di++;
             }
-            else if (average_x < WIDTH/2 - STOPAREA)
+            else if (average_x < WIDTH / 2 - STOPAREA)
                 rounds_ac++;
         }
 
@@ -160,7 +161,7 @@ int main(int, char *argv[])
         }
 
         // Reset rounds if CHECKROUNDS is reached.
-        if (rounds == CHECKROUNDS)  {
+        if (rounds == CHECKROUNDS) {
             rounds_ac = 0;
             rounds_di = 0;
 
