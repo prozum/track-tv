@@ -1,8 +1,8 @@
 track-tv
 ========
-Program to control screen tracking and following faces
+A program to track faces and adjust a screen to the faces
 
-# Installer Python Version
+# Install Python Version
 ```bash
 # Use pip to install pyFirmata 
 sudo pip install pyfirmata
@@ -14,7 +14,7 @@ git clone https://github.com/prozum/track-tv.git && cd track-tv
 python track-tv.py
 ```
 
-# Installer C++ Version
+# Install C++ Version
 ```bash
 # Use pip to install pyFirmata 
 sudo pip install pyfirmata
