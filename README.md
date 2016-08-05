@@ -1,6 +1,6 @@
 track-tv
 ========
-A program to adjust screens to tracked faces
+Tracks faces to adjust screen orientation
 
 # Install Python Version
 ```bash
