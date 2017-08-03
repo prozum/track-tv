@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
         cout << "Cannot read cascade file: " << argv[1] << endl;
         return 1;
     }
-/*
+
     // Init Firmata
     firmata = firmata_new((char*)"/dev/ttyACM99");
 
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 
     // Pneumatic cylinder pin
     firmata_pinMode(firmata, PNPIN, MODE_OUTPUT);
-  */
+  
     // Setup window
     namedWindow("track-tv", WINDOW_NORMAL);
 
@@ -141,29 +141,29 @@ int main(int argc, char *argv[])
         // If all rounds suggested to activate the motor
         if (rounds_ac == CHECKROUNDS)
         {
-            //firmata_digitalWrite(firmata, ACPIN, HIGH);
+            firmata_digitalWrite(firmata, ACPIN, HIGH);
 
             // If all rounds suggested to go right
             if (rounds_di == CHECKROUNDS)
             {
-                //firmata_digitalWrite(firmata, DIPIN, HIGH);
+                firmata_digitalWrite(firmata, DIPIN, HIGH);
                 usleep(TIME);
-                //firmata_digitalWrite(firmata, ACPIN, LOW);
+                firmata_digitalWrite(firmata, ACPIN, LOW);
                 cout << "Go right" <<  endl;
             }
             // If all rounds suggested to go left
             else if (rounds_di == 0)
             {
-                //firmata_digitalWrite(firmata, DIPIN, LOW);
+                firmata_digitalWrite(firmata, DIPIN, LOW);
                 usleep(TIME);
-                //firmata_digitalWrite(firmata, ACPIN, LOW);
+                firmata_digitalWrite(firmata, ACPIN, LOW);
                 cout << "Go left" <<  endl;
             }
         }
         // If any rounds suggested to stop the motor
         else
         {
-            //firmata_digitalWrite(firmata, ACPIN, LOW);
+            firmata_digitalWrite(firmata, ACPIN, LOW);
             cout << "Stay" <<  endl;
         }
 
@@ -181,13 +181,13 @@ int main(int argc, char *argv[])
         // Activate pneumatic cylinder
         if (key == KEY_P) {
             pnstate = !pnstate;
-            //firmata_digitalWrite(firmata, PNPIN, pnstate);
+            firmata_digitalWrite(firmata, PNPIN, pnstate);
         }
     }
     while (key != KEY_ESC);
 
     // Stop motor
-    //firmata_digitalWrite(firmata, ACPIN, LOW);
+    firmata_digitalWrite(firmata, ACPIN, LOW);
 
     // the camera will be deinitialized automatically in VideoCapture destructor
     return 0;
